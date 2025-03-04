@@ -1,5 +1,5 @@
 {% set name = "EnviroAmpDesigner" %}
-{% set version = "0.1.1" %}
+{% set version = "0.1.2" %}
 
 package:
   name: {{ name|lower }}
@@ -7,13 +7,13 @@ package:
 
 source:
   url: https://github.com/AntonS-bio/EnviroAmpDesigner/archive/{{ version }}.tar.gz
-  sha256: e25b71eca63e62c56baffa0a447872aa48b1327ece16e6463ed3527d5389928a
+  sha256: 9b9028f508b959168f158d156eab5b491e7ea25c12becdf820bc3e5cff1e8b1c
 
 build:
   noarch: python
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   run_exports:
-      - {{ pin_subpackage('EnviroAmpDesigner', max_pin="x.x") }}  
+      - {{ pin_subpackage('enviroampdesigner', max_pin="x.x") }}  
   number: 0
 
 requirements:
@@ -28,12 +28,12 @@ requirements:
     - biopython >=1.85
     - pandas >=2.0.0
     - tqdm >=4.66.*
+    - primer3-py >=2.0.*
     - numpy >=1.20.*
-    - primer3 >=2.6.1
-
+    
 test:
   commands:
-    - run -h
+    - design_primers -h
   requires:
     - pip
 

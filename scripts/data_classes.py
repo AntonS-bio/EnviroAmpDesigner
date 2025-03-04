@@ -820,7 +820,6 @@ class InputConfiguration:
     BASE_DIC={"A":1,"C":2,"G":3,"T":4,"N":5,"-":0}
     SPECIES_NAME="species"
     NUMBER_DIC=dict([ (value, key) for key,value in BASE_DIC.items() ])
-    cpu_threads=1
     flank_len_to_check=-1 #this is intentional to avoid hiding this parameters,
     max_amplicon_len=-1
     use_negative_genomes_subdir=False
