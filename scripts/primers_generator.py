@@ -29,12 +29,13 @@ class PrimersGenerator():
 
     def _load_existing_primers(self) -> List[Primer]:
         result: List[Primer] = []
-        with open(self.config.existing_primers, "r") as file:
-            for line in file:
-                values = line.strip().split("\t")
-                if len(values)==2:
-                    result.append(self._sequence_to_primer(values[0], False) )
-                    result.append(self._sequence_to_primer(values[1], True) )
+        if self.config.existing_primers!="":
+            with open(self.config.existing_primers, "r") as file:
+                for line in file:
+                    values = line.strip().split("\t")
+                    if len(values)==2:
+                        result.append(self._sequence_to_primer(values[0], False) )
+                        result.append(self._sequence_to_primer(values[1], True) )
         return result
 
     def _get_seq_coordinates_in_ref(self, sequence) -> int:
@@ -365,7 +366,7 @@ class PrimersGenerator():
 
         with open(self.config.output_dir+"snps.tsv","w") as output_file:
             for genotype in target_gts:
-                print(genotype)
+                print(f'checking SNPs for genotype {genotype} ')
                 self.target_gt=genotype
                 target_genotype=self.genotypes.get_genotype(self.target_gt)
                 for snp in target_genotype.defining_snps:
@@ -375,8 +376,6 @@ class PrimersGenerator():
                                     '{0:.2f}'.format(snp.specificity)+
                                     "-"+str(snp.sensitivity)+"\n")
 
-
-
                 for i, snp in enumerate(target_genotype.defining_snps):
                     species_gt_snps=self._snps_within_interval(all_species_snps, snp.ref_contig_id, snp.position-interval_len, snp.position+interval_len)
                     if len(species_gt_snps)==0:
@@ -384,7 +383,7 @@ class PrimersGenerator():
                     #if len(species_gt_snps)>0 and len(species_gt_snps)<30: # the target SNP has at least one flanking species SNPs, but too many is indicative of problematic region
                     left_species_snps=[species_snp for species_snp in species_gt_snps if species_snp.position<snp.position]
                     right_species_snps=[species_snp for species_snp in species_gt_snps if species_snp.position>snp.position]
-                    #four cases: 
+                    #four cases:
                     # 1 - left and right serovar SNPs anchored primers
                     # 2 - left serovar anchored primer
                     # 3 - right serovar anchored primer
@@ -395,15 +394,24 @@ class PrimersGenerator():
                         snp_primer_pairs = self._left_primers_given(left_snps=left_species_snps, target_snp=snp)
                     elif len(right_species_snps)>0:
                         snp_primer_pairs = self._right_primers_given(right_snps=right_species_snps, target_snp=snp)
+                    else:
+                        continue
+                    print(f'Found {len(snp_primer_pairs)} primer pairs for SNP {snp.ref_contig_id} {snp.position}')
                     for pair in snp_primer_pairs:
                         pair.targets.add(genotype)
                         #Check how many SNP conincide with the generated primers
                         pair.forward.species_snps=len(self._snps_within_interval(all_species_snps, snp.ref_contig_id, pair.forward.ref_start, pair.forward.ref_end))
-                        pair.reverse.species_snps=len(self._snps_within_interval(all_species_snps, snp.ref_contig_id, pair.forward.ref_start, pair.forward.ref_end))
+                        pair.reverse.species_snps=len(self._snps_within_interval(all_species_snps, snp.ref_contig_id, pair.reverse.ref_start, pair.reverse.ref_end))
+                    print(f'Adding {len(snp_primer_pairs)} primer pairs for SNP {snp.ref_contig_id} {snp.position}')
                     self.new_primer_pairs+=snp_primer_pairs
+                    print(len(self.new_primer_pairs))
+            print(f'{len(self.new_primer_pairs)} prior to removing duplicates')
             self._remove_duplicate_primer_pairs(self.new_primer_pairs)
+            print(f'{len(self.new_primer_pairs)} left after removing duplicates')
             self._remove_interfering_primers(self.new_primer_pairs)
+            print(f'{len(self.new_primer_pairs)} left after removing interfering primers')
             self._remove_primers_in_repeat_regions(self.new_primer_pairs)
+            print(f'{len(self.new_primer_pairs)} left after removing primers in repeat regions')
 
             #Check if other genotypes are captured by selected primers
             all_genotype_snps=[snp for genotype in self.genotypes.genotypes for snp in genotype.defining_snps if genotype.name!=InputConfiguration.SPECIES_NAME and genotype.name!=self.target_gt]

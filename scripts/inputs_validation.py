@@ -194,3 +194,38 @@ class ValidateFiles:
         if len(rare_gts_no_in_hierarchy)>0:
             mismatched_gts=",".join(rare_gts_no_in_hierarchy)
             raise ValueError(f'Config file has genotype {mismatched_gts} as rare genotype, but its absent in first column of hierarchy file')
+
+    def validate_specific_target_snps(self, specific_snps_file_name:str) -> bool:
+        """
+        Check that the file with list of specific SNPs has three columns per line,
+        that separator is Tab, that value in last column is unique
+        and that second column contains integers
+
+        :param specific_snps_file_name: File name for file with specific SNPs to target
+        :type specific_snps_file_name: str
+        """
+        lines_counter=1
+        names=set()
+        if not exists(specific_snps_file_name):
+            warnings.warn(f'File with specific target SNPs is specified, but does not exist. Check the address: {specific_snps_file_name} does not exist.')
+            return False
+        with open(specific_snps_file_name) as snps_file:
+            for line in snps_file:
+                values=line.strip().split("\t")
+                if len(values)!=3:
+                    if lines_counter==0:
+                        warnings.warn(f'SNPs file {specific_snps_file_name} is either empty or does not use Tab as delimiter')
+                        warnings.warn(f'This is not a problem, unless you meant to specify something in it.')
+                    if line.strip()!="":
+                        warnings.warn(f'SNPs file {specific_snps_file_name} line {str(lines_counter)} has information, but contains more or fewer than 3 values.')
+                        warnings.warn(f'Please check that it uses Tab as delimiter and only has three values per line.')
+                        return False
+                if not values[1].isdigit():
+                    warnings.warn(f'Line {str(lines_counter)} in file {specific_snps_file_name} has non-integer value. Position in contig can only be integer.')
+                    return False
+                if values[2] in names:
+                    warnings.warn(f'Some names (third column) in file {specific_snps_file_name} are not unique. Only unique values are permitted.')
+                    return False
+                names.add(values[2])
+                lines_counter+=1
+        return True

@@ -80,7 +80,7 @@ class VCFutilities():
 
 
             if len(multiploid_positions)>0:
-                warnings.warn(f'VCF file {filename} has {len(multiploid_positions)} duplicated positions')
+                warnings.warn(f'VCF file {filename} has {len(multiploid_positions)} multiploid positions. These will be ignored as bacterial haploid VCFs expected')
 
         else:
             raise ValueError(f'The vcf type {vcf_file_type} is not currently supported')
@@ -115,10 +115,13 @@ class VCFutilities():
         #Determine what alleles are present among the SNPs
         present_alleles=set( [f[0].get_genotype_allele(f[1]) for f in gt_snp] )
         reference_allele=set([f[1].ref_base for f in gt_snp] )
-        if len(reference_allele)!=1:
-            raise ValueError("More than one reference allele")
-        else:
-            reference_allele=reference_allele.pop()
+        if len(reference_allele)!=1 and True in set([f[1].is_species_snp for f in gt_snp]):
+            #A position has to different reference alleles
+            # this is due to SNP A->T being recorded as A/T, but deletion of A recorded as CA->A
+            # ignore these cases
+            print(f'Reference position {set([str(f[1].position) for f in gt_snp])} has two alleles. Likely result of SNP and INDEL at same site in different samples. This will be ignored')
+        
+        reference_allele=reference_allele.pop()
         
         if len(present_alleles)==1 and reference_allele in present_alleles:
             #the SNP is reference allele, so return empty list

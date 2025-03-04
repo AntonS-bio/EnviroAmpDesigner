@@ -1,5 +1,6 @@
 from inputs_validation import ValidateFiles
 from os import listdir
+from os.path import splitext
 import metadata_utils as metadata_utils
 from load_vcfs import VCFutilities
 from hierarchy_utils import HierarchyUtilities
@@ -16,7 +17,7 @@ class GenotypeSnpIdentifier:
         self.vcf_utils=VCFutilities()
         self.file_validator=ValidateFiles()
         self.master_vcf=pd.DataFrame()
-        self.vcf_files: List[str]=[f'{config.vcf_dir}{f}' for f in listdir(config.vcf_dir) ] #use this to limit the number of samples loaded in debugging mode
+        self.vcf_files: List[str]=[f'{config.vcf_dir}{f}' for f in listdir(config.vcf_dir) if splitext(f)[1]==".vcf"  ]
 
         if config.repeats_bed_file!="":
             self.file_validator.validate_bed(config.repeats_bed_file)

@@ -1,41 +1,51 @@
-{% set name = "HandyAmpliconTool" %}
-{% set version = "0.1_beta.10" %}
+{% set name = "EnviroAmpDesigner" %}
+{% set version = "0.1.1" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://github.com/AntonS-bio/HandyAmpliconTool/archive/v{{ version }}.tar.gz
-  sha256: 68134788237e01f30e19df3f12af1134b9776173ce7d787e0e3fed4b99374839
+  url: https://github.com/AntonS-bio/EnviroAmpDesigner/archive/{{ version }}.tar.gz
+  sha256: e25b71eca63e62c56baffa0a447872aa48b1327ece16e6463ed3527d5389928a
 
 build:
   noarch: python
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  run_exports:
+      - {{ pin_subpackage('EnviroAmpDesigner', max_pin="x.x") }}  
   number: 0
 
 requirements:
   host:
-    - python
     - pip
-    - 'biopython>=1.81'
-    - 'blast>=2.14.1'
-    - 'mafft>=7.520'    
+    - python >=3.12
+    - setuptools
   run:
-    - python
-    - 'biopython>=1.81'
-    - 'blast>=2.14.1'
-    - 'mafft>=7.520'
+    - python >=3.12
+    - mafft >=7.520
+    - blast >=2.16.0
+    - biopython >=1.85
+    - pandas >=2.0.0
+    - tqdm >=4.66.*
+    - numpy >=1.20.*
+    - primer3 >=2.6.1
 
 test:
   commands:
-    - pip check
+    - run -h
   requires:
     - pip
 
 about:
-  license: GPL-3.0
+  license: GPL-3.0-only
   license_file: LICENSE
+  home: https://github.com/AntonS-bio/EnviroAmpDesigner
+  summary: 'Tool for training model and classifying reads from environmental ONT amplicon sequencing.'
+  description: |
+    Tool for training model and classifying reads from environmental ONT amplicon sequencing. 
+  doc_source_url: https://github.com/AntonS-bio/EnviroAmpDesigner/blob/main/README.md
+
 
 extra:
   recipe-maintainers:

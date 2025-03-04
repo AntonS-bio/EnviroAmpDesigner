@@ -7,7 +7,8 @@
     "repeats_bed_file": "~/paratyphi/inputs/Paratyphi_A_repeats.bed",
     "hierarchy_file": "~/paratyphi/inputs/2.4.9_hierarchy.tsv",
     "meta_data_file": "~/paratyphi/inputs/metadata.csv",
-    "existing_primers": "~/paratyphi/inputs/existing_primer.txt"
+    "existing_primers": "~/paratyphi/inputs/existing_primer.txt",
+    "specific_target_snps": "~/Typhi/inputs/target_snps.tsv"
     },
     
     "input_directories":{

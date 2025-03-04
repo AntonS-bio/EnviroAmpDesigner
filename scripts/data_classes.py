@@ -867,6 +867,10 @@ class InputConfiguration:
     @property
     def name_stubs(self) -> str:
         return self._config_data["name_stubs"]
+    
+    @property
+    def specific_target_snps(self) -> str:
+        return expanduser(self._config_data["input_files"]["specific_target_snps"])
 
     @property
     def reference_fasta(self) -> str:
@@ -927,7 +931,7 @@ class InputConfiguration:
 
        
     @property
-    def gts_with_few_snps(self) -> str:
+    def gts_with_few_snps(self) -> List[str]:
         return self._config_data["analysis_parameters"]["gts_with_few_snps"]
 
     @property

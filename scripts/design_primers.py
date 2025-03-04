@@ -4,7 +4,7 @@ from os.path import exists, expanduser, join
 from os import makedirs, remove, listdir
 from shutil import which
 from sys import exit
-from data_classes import Genotype, Genotypes, InputConfiguration
+from data_classes import SNP, Genotype, Genotypes, InputConfiguration
 from inputs_validation import ValidateFiles
 from load_vcfs import VCFutilities
 from identify_genotype_snps import GenotypeSnpIdentifier
@@ -23,7 +23,15 @@ def _check_inputs(config_data: InputConfiguration):
     file_validator=ValidateFiles()
     if not file_validator.validate_fasta(config_data.reference_fasta):
         exit(1)
-    
+
+    if not exists(config_data.existing_primers):
+        warnings.warn(f'Existing primers file {config_data.existing_primers} does not exist.')
+        exit(1)
+
+    if config_data.specific_target_snps!="":
+        if not file_validator.validate_specific_target_snps(config_data.specific_target_snps):
+            exit(1)
+        
     if config_data.repeats_bed_file!="":
         if not file_validator.validate_bed(config_data.repeats_bed_file):
             exit(1)
@@ -78,13 +86,39 @@ def _setup_analysis(config_data: InputConfiguration):
     for stub in config_data.name_stubs:
         name_converters.name_stubs.add(stub)
 
+def _load_specific_target_snps(config_data: InputConfiguration, genotypes: Genotypes):
+    """
+    Use "specific_target_snps" field from config to load the reference sequence positions 
+    at which a specific SNP needs to be targeted. As example are genes with AMR mutations which are 
+    not genotype specific.
+
+    :param config_data: the configuration data for the run
+    :type config_data: InputConfiguration
+
+    :param genotypes: List of genotypes that are targeted by the run
+    :type config_data: Genotypes
+    """
+    with open(config_data.specific_target_snps) as snps_file:
+        for line in snps_file:
+            contig, position, name=line.strip().split()
+            extra_genotype=Genotype(name)
+            #The ref and alt base are irrelevant as specific position is targeted for amplicon capture
+            target_snp=SNP(ref_contig_id=contig, ref_base="T", alt_base="C", position=int(position),passes_filters=True)
+            target_snp.is_genotype_snp=True
+            target_snp.sensitivity=1
+            target_snp.specificity=1
+            #the actual depth is irrelevant
+            extra_genotype.add_genotype_allele(target_snp, target_snp.alt_base, depth=100)
+            genotypes.genotypes.append(extra_genotype)
+            config_data.gts_with_few_snps.append(name)
+
 def _identify_genotype_SNPs(config_data: InputConfiguration):
 
     snp_identifier=GenotypeSnpIdentifier(config_data)
 
     genotypes: Genotypes = snp_identifier.identify_snps()
 
-    genotypes.genotypes_to_snp_matrix().to_csv(config_data.genotype_snps, sep="\t", index=False)
+    #genotypes.genotypes_to_snp_matrix().to_csv(config_data.genotype_snps, sep="\t", index=False)
 
     with open(config_data.genotype_snps, "w") as snps_file:
         for genotype in genotypes.genotypes:
@@ -135,6 +169,11 @@ def main():
 
     genotypes: Genotypes = _identify_genotype_SNPs(config_data)
 
+    #For amplification of AMR genes, the examination of the target species is not required
+    #however, we need to identify the SNP that uniquely identify the target species
+
+    _load_specific_target_snps(config_data, genotypes)
+   
     ### DEBUG command
     # with open(config_data.genotypes_data, "wb") as output:
     #     pickle.dump(genotypes, output)
@@ -150,8 +189,8 @@ def main():
 
     # # #### START MSA generation section ####
 
-    vcf_utils=VCFutilities()
-    vcf_utils.output_genotypes_vcf(genotypes, config_data.gt_snps_vcf)
+    # vcf_utils=VCFutilities()
+    # vcf_utils.output_genotypes_vcf(genotypes, config_data.gt_snps_vcf)
     if run_mode!="Amplicon":
         exit(0)
 
@@ -167,6 +206,8 @@ def main():
     # ### DEBUG command
     # with open(config_data.output_dir+"/species_gt.pkl", "wb") as output:
     #     pickle.dump(species_genotype, output)
+    # with open(config_data.output_dir+"/species_gt.pkl", "rb") as pickled_file:
+    #     species_genotype: Genotype = pickle.load(pickled_file)
     # ### DEBUG command
     flanking_amplicons=snp_identifier.get_bifurcating_snps(species_genotype)
 
