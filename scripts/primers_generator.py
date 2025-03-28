@@ -72,37 +72,6 @@ class PrimersGenerator():
         else:
             return (False, "")
         
-    # def load_existing_primer_from_fasta(self, existing_primers_fasta: str):
-    #     self.existing_primers.clear()
-    #     for record in SeqIO.parse(existing_primers_fasta, "fasta"):
-    #         direction_info=self._id_has_direction_info(record.id)
-    #         if direction_info[0]:
-    #             primer=self._sequence_to_primer( str(record.seq), is_reverse=direction_info[1]=="reverse" )
-    #         else: #this is worst case, add primer as both forward and reverse
-    #             primer=self._sequence_to_primer( str(record.seq), is_reverse=True )
-    #             self.existing_primers.append(primer)
-    #             primer=self._sequence_to_primer( str(record.seq), is_reverse=False)
-    #         self.existing_primers.append(primer)
-
-    # def load_existing_primer_from_bed(self, existing_primers_bed: str):
-    #     self.existing_primers.clear()        
-    #     if existing_primers_bed!="":
-    #         file_validator=ValidateFiles()
-    #         file_validator.validate_bed(existing_primers_bed, min_col_number=6)
-    #         with open(existing_primers_bed) as bed_file:
-    #             for i, line in enumerate(bed_file):
-    #                 values=line.strip().split("\t")
-    #                 if values[0] not in self.ref_seq:
-    #                     raise ValueError(f'Contig {values[0]} from existing amplicons file {existing_primers_bed} not found in reference fasta {self.config.reference_fasta}')
-    #                 if int(values[1])+1>len(self.ref_seq[values[0]]):
-    #                     raise ValueError(f'Amplicon {i+1} in existing amplicons file {existing_primers_bed} has coordinate {values[0]} {int(values[1])} greater than lenght of reference sequence: {self.config.reference_fasta}')
-    #                 primer_seq=self.ref_seq[values[0]][int(values[1]):int(values[2])+1] # +1 because python excludes the last item of slice
-    #                 is_reverse = values[5]=="-"
-    #                 if is_reverse:
-    #                     primer_seq=str(Seq(primer_seq).reverse_complement())
-    #                 primer=self._sequence_to_primer( primer_seq, is_reverse )
-    #                 self.existing_primers.append(primer)
-
     def add_global_primer_args(self, for_seq: str, rev_seq:str, template: str):
         global_args={
             'PRIMER_OPT_SIZE': self.config.primer_opt_size,
@@ -180,15 +149,6 @@ class PrimersGenerator():
                     amplicon_length<self.config.max_amplicon_len:
                 result.append(new_pair)
         return result
-
-    # def _for_testing_load_gts(self, species_pkl, gts_pkl):
-    #     with open(species_pkl, "rb") as pickled_file:
-    #         species: Genotype = pickle.load(pickled_file)
-
-    #     with open(gts_pkl, "rb") as pickled_file:
-    #         self.genotypes: Genotypes = pickle.load(pickled_file)
-
-    #     self.genotypes.genotypes.append(species)
 
     def _snps_within_interval(self, snps: List[SNP], ref_contig: int, interval_start:int, interval_end: int) -> List[SNP]:
         result=[snp for snp in snps if snp.ref_contig_id==ref_contig and snp.position > interval_start and snp.position < interval_end]
