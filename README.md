@@ -57,6 +57,8 @@ python run.py -m SNP -c config.json
 Due to large number of options and to improve reproducibility most inputs are specified via a JSON file (config.json above) an example of which is in this repository "sample_files" directory.
 
 ### JSON input file
+You can see an example config file here: [config JSON](https://github.com/AntonS-bio/EnviroAmpDesigner/blob/main/sample_files/config.json)
+
 The fields in JSON config are:
 
   
